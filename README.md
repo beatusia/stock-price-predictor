@@ -28,7 +28,7 @@ stock-price-predictor/
 │   ├── data_prep.py             # Feature engineering, data splits
 │   ├── model.py                 # Model training and saving
 │   └── evaluate.py              # Evaluation metrics and plots
-├── models/                      # Saved trained models (e.g., .pkl)
+├── models/                      # Saved trained models
 ├── outputs/                     # Figures, logs, and evaluation results
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # This file
