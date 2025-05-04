@@ -21,14 +21,15 @@ This project uses historical stock data to predict whether a stock's closing pri
 
 ```bash
 stock-price-predictor/
-├── data/                # Raw and processed CSV files
-├── notebooks/           # Jupyter exploration notebooks
-├── src/                 # Python scripts for core logic
-│   ├── data_prep.py     # Feature engineering, data splits
-│   ├── model.py         # Model training and saving
-│   └── evaluate.py      # Evaluation metrics and plots
-├── models/              # Saved trained models (e.g., .pkl)
-├── outputs/             # Figures, logs, and evaluation results
-├── requirements.txt     # Python dependencies
-├── README.md            # This file
+├── data/                        # Raw and processed CSV files
+├── notebooks/
+│   ├── exploratory_data_analysis.ipynb   # Initial EDA notebook
+├── src/
+│   ├── data_prep.py             # Feature engineering, data splits
+│   ├── model.py                 # Model training and saving
+│   └── evaluate.py              # Evaluation metrics and plots
+├── models/                      # Saved trained models (e.g., .pkl)
+├── outputs/                     # Figures, logs, and evaluation results
+├── requirements.txt             # Python dependencies
+├── README.md                    # This file
 └── .gitignore
