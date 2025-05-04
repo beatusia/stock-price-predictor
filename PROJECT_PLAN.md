@@ -7,7 +7,7 @@ This project aims to predict next-day stock prices using historical data and sup
 ## ✅ Week 1: Setup & Data Acquisition
 
 - ✅ Create Python virtual environment
-- [ ] Install and freeze libraries (`requirements.txt`)
+- ✅ Install and freeze libraries (`requirements.txt`)
 - [ ] Download stock price data using `yfinance`
 - [ ] Save raw data to `data/` directory
 - [ ] Create `data_prep.py` with download functions
