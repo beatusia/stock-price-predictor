@@ -20,16 +20,27 @@ This project uses historical stock data to predict whether a stock's closing pri
 ## 📁 Project Structure
 
 ```bash
-stock-price-predictor/
-├── data/                        # Raw and processed CSV files
-├── notebooks/
-│   ├── exploratory_data_analysis.ipynb   # Initial EDA notebook
+stock_price_prediction/
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── README.md  # Information about the data, preprocessing steps, and dataset sources
+│
+├── notebooks/          # Jupyter notebooks for exploration and prototyping
+│   ├── EDA.ipynb       # Exploratory data analysis
+│   ├── model_building.ipynb
+│   └── model_tuning.ipynb
+│
 ├── src/
-│   ├── data_prep.py             # Feature engineering, data splits
-│   ├── model.py                 # Model training and saving
-│   └── evaluate.py              # Evaluation metrics and plots
-├── models/                      # Saved trained models
-├── outputs/                     # Figures, logs, and evaluation results
-├── requirements.txt             # Python dependencies
-├── README.md                    # This file
-└── .gitignore
+│   ├── __init__.py
+│   ├── data_preprocessing.py  # Data cleaning and processing scripts
+│   ├── feature_engineering.py
+│   ├── model.py          # ML model definitions
+│   └── evaluation.py     # Model evaluation
+│
+├── requirements.txt  # Python dependencies
+├── PROJECT_PLAN.md    # Detailed project plan
+├── README.md          # Overview of the project
+└── .gitignore         # Git ignore file
+

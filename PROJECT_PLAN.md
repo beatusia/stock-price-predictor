@@ -6,12 +6,17 @@ This project aims to predict next-day stock prices using historical data and sup
 
 ## ✅ Week 1: Setup & Data Acquisition
 
-- ✅ Create Python virtual environment
-- ✅ Install and freeze libraries (`requirements.txt`)
-- ✅ Download stock price data using `yfinance`
-- ✅ Save raw data to `data/` directory
-- [ ] Create `data_prep.py` with download functions
-- [ ] Commit: "Project setup and data download"
+- ✅ Create project folder `stock-price-predictor` using standard ML directory structure
+- ✅ Initialize Git repository and connect to GitHub
+- ✅ Create `.gitignore` file
+- ✅ Create and activate Python virtual environment
+- ✅ Install required libraries (`yfinance`, `pandas`, `numpy`, etc.)
+- ✅ Freeze requirements to `requirements.txt`
+- ✅ Define stock tickers across 11 major U.S. sectors
+- ✅ Implement `data_prep.py` to download historical data (2000-01-01 to 2025-05-05)
+- ✅ Save raw data to `data/raw/` directory
+- ✅ Create `data/README.md` describing data sources, tickers, and folder structure
+- ✅ Commit: "✅ Project setup, environment, data download script, and data README completed"
 
 ---
 
