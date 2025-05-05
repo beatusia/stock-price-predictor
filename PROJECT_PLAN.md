@@ -1,6 +1,6 @@
 # 📊 Stock Price Prediction Project Plan & Checklist
 
-This project aims to predict next-day stock prices using historical data and supervised machine learning techniques. Below is a weekly breakdown of the tasks with checkboxes I will be using to track my own progress.
+This project aims to predict next-day stock prices using historical data and supervised machine learning techniques. Below is a weekly breakdown of the tasks with checkboxes, which I will be using to track progress.
 
 ---
 
