@@ -35,10 +35,11 @@ stock_price_prediction/
 ├── src/
 │   ├── __init__.py
 │   ├── data_download.py       # Downloads raw data to data/raw
+│   ├── data_modification.py   # Removes two first empty rows and saves modified files
 │   ├── data_preprocessing.py  # Data cleaning and processing scripts
+│   ├── evaluation.py          # Model evaluation
 │   ├── feature_engineering.py # Creative Feature engineering 
-│   ├── model.py               # ML model definitions
-│   └── evaluation.py          # Model evaluation
+│   └── model.py               # ML model definitions
 │
 ├── requirements.txt           # Python dependencies
 ├── PROJECT_PLAN.md            # Detailed project plan
