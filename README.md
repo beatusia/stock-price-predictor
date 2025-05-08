@@ -1,7 +1,7 @@
 # 📈 Stock Price Predictor
 
-Predict next-day stock price movement (up/down) using historical OHLCV data.  
-This project is part of my AI/ML apprenticeship and focuses on applying core supervised learning techniques to a real-world finance problem.
+Predict next-day stock price movement using historical OHLCV data.  
+This project is part of my AI/ML apprenticeship and focuses on applying core learning techniques to a real-world finance problem.
 
 ---
 
@@ -10,8 +10,8 @@ This project is part of my AI/ML apprenticeship and focuses on applying core sup
 This project uses historical stock data to predict whether a stock's closing price will go up or down the next day. It includes:
 
 - Feature engineering on time-series data (lag, returns, volatility)
-- Classification models (Logistic Regression, Decision Trees, Random Forest, XGBoost)
-- Model evaluation with metrics like ROC-AUC, precision, recall
+- Linear Regression model
+- Model evaluation 
 - Reproducible, modular Python code
 - Ready-to-deploy project structure
 
