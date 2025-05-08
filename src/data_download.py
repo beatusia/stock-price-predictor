@@ -1,5 +1,5 @@
-# this script downloads stock data from Yahoo Finance and saves it to CSV files
 # src/data_download.py 
+# This script downloads stock data from Yahoo Finance and saves it to CSV files
 import yfinance as yf
 import os
 import pandas as pd

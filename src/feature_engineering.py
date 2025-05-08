@@ -1,4 +1,5 @@
-# Creating High-Low, Price-Open and lagged features for closed prices
+# src/feature_engineering.py
+# This script creates High-Low, Price-Open and lagged features for closed prices for the past 10 trading days
 import os
 import pandas as pd
 

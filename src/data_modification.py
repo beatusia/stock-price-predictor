@@ -1,4 +1,5 @@
-# If you find that your csv files have two empty rows with the ticker name in the first row, use this script to remove them
+# src/data_modification.py
+# This script processes stock data CSV files to remove unwanted rows and add a ticker column.
 import pandas as pd
 import os
 
