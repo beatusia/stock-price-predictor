@@ -6,7 +6,7 @@ import os
 directory = 'path_to_your_directory'  # Change this to your directory path
 
 # List all files in the directory
-files = [f for f in os.listdir(directory) if f.endswith('.csv')]  # Adjust extension if needed
+files = [f for f in os.listdir(directory) if f.endswith('.csv')]  # Filter for CSV files
 
 # Loop through each file
 for file in files:
@@ -27,9 +27,6 @@ for file in files:
     ticker_name = os.path.splitext(file)[0]  # Extracts ticker name from filename
     df['TICKER'] = ticker_name
     
-    # Optionally, reset the index if necessary (so the Date column becomes a regular column)
-    # df = df.reset_index(drop=False)  # Uncomment if you want the 'Date' column to become a regular column
-    
     # Save the modified DataFrame back to a new file (optional)
     new_file_path = os.path.join(directory, f"modified_{file}")
     df.to_csv(new_file_path, index=True)  # Save with the 'Date' index intact
@@ -40,5 +37,36 @@ for file in files:
 
 # Optionally, you can remove the original file if needed
 # os.remove(file_path)  # Uncomment to delete the original file after processing
-
 # Note: Make sure to replace 'path_to_your_directory' with the actual path to your directory.
+
+# The code below is for renaming the index and reordering the columns in the modified CSV files
+# Define the directory path
+directory = '/data/raw/modified'  # Update this if needed
+
+# Loop through each CSV file in the directory
+for file in os.listdir(directory):
+    if file.endswith('.csv'):
+        file_path = os.path.join(directory, file)
+        
+        # Read the CSV using the first column as the index
+        df = pd.read_csv(file_path, index_col=0)
+        
+        # Convert the index (which is 'Price' mislabeled) into a new column called 'Date'
+        df.index.name = 'Date'  # Set proper name for the index
+        df.reset_index(inplace=True)
+
+        # Ensure 'TICKER' exists (skip or warn if not)
+        if 'TICKER' not in df.columns:
+            print(f"Warning: 'TICKER' column not found in {file}")
+            continue
+        
+        # Define the desired column order
+        desired_order = ['Date', 'TICKER', 'Close', 'High', 'Low', 'Open', 'Volume']
+        # Keep only columns that exist in the current DataFrame
+        ordered_columns = [col for col in desired_order if col in df.columns]
+
+        # Reorder the DataFrame
+        df = df[ordered_columns]
+        
+        # Save back to the same file
+        df.to_csv(file_path, index=False)
