@@ -45,4 +45,4 @@ Data is pulled using `yfinance.download()` which queries Yahoo Finance APIs. No 
 To regenerate the raw data files, run:
 
 ```bash
-python src/data_prep.py
+python src/data_download.py
