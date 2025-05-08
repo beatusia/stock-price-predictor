@@ -28,7 +28,7 @@ The data consists of historical daily stock prices for 22 companies across 11 ma
 ## 📅 Date Range
 
 - Start Date: **2000-01-01**
-- End Date: **2025-05-05**
+- End Date: **2025-05-08**
 - Frequency: **Daily**
 
 ## 📥 Source
