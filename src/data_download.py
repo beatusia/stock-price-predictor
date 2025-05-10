@@ -19,7 +19,7 @@ us_market_sectors = {
     "Materials": ["LIN", "SHW"]
 }
 
-def download_data(tickers, start="2000-01-01", end="2025-05-05"):
+def download_data(tickers, start="1999-12-01", end="2025-05-10"):
     os.makedirs("data/raw", exist_ok=True)
 
     for sector, symbols in tickers.items():

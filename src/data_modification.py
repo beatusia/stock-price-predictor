@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 # Define the directory where your stock files are located
-directory = 'path_to_your_directory'  # Change this to your directory path
+directory = '/Users/beatawyspianska/Desktop/AIML_Projects/predict_stock_price/stock-price-predictor/data/raw/true_raw'  # Change this to your directory path
 
 # List all files in the directory
 files = [f for f in os.listdir(directory) if f.endswith('.csv')]  # Filter for CSV files
@@ -42,7 +42,7 @@ for file in files:
 
 # The code below is for renaming the index and reordering the columns in the modified CSV files
 # Define the directory path
-directory = '/data/raw/modified'  # Update this if needed
+directory = '/Users/beatawyspianska/Desktop/AIML_Projects/predict_stock_price/stock-price-predictor/data/raw/modified'  # Update this if needed
 
 # Loop through each CSV file in the directory
 for file in os.listdir(directory):
