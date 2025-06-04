@@ -1,10 +1,11 @@
-# src/data_download.py 
+# src/data_download.py
 # This script downloads stock data from Yahoo Finance and saves it to CSV files
-import yfinance as yf
 import os
-import pandas as pd
 from datetime import date
 from pathlib import Path
+
+import pandas as pd
+import yfinance as yf
 
 # Define your stock tickers by sector
 us_market_sectors = {
@@ -18,15 +19,18 @@ us_market_sectors = {
     "Energy": ["XOM", "CVX"],
     "Utilities": ["NEE", "DUK"],
     "Real Estate": ["AMT", "PLD"],
-    "Materials": ["LIN", "SHW"]
+    "Materials": ["LIN", "SHW"],
 }
 
 # Output directory
-OUTPUT_DIR = Path("/Users/beatawyspianska/Desktop/AIML_Projects/predict_stock_price/stock-price-predictor/data/raw/true_raw")
+OUTPUT_DIR = Path(
+    "/Users/beatawyspianska/Desktop/AIML_Projects/predict_stock_price/stock-price-predictor/data/raw/true_raw"
+)
+
 
 def download_data(tickers, start="1999-12-01", end=None, output_dir=OUTPUT_DIR):
     if end is None:
-        end = date.today().strftime('%Y-%m-%d')
+        end = date.today().strftime("%Y-%m-%d")
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -43,6 +47,7 @@ def download_data(tickers, start="1999-12-01", end=None, output_dir=OUTPUT_DIR):
                 print(f"✅ Saved {symbol} to {file_path}")
             except Exception as e:
                 print(f"❌ Failed to download {symbol}: {e}")
+
 
 if __name__ == "__main__":
     download_data(us_market_sectors)
