@@ -1,4 +1,4 @@
-# src/data_modification.py
+# src/02_data_modification.py
 # This script processes stock data CSV files to remove unwanted rows and add a ticker column.
 import os
 

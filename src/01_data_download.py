@@ -1,4 +1,4 @@
-# src/data_download.py
+# src/01_data_download.py
 # This script downloads stock data from Yahoo Finance and saves it to CSV files
 import os
 from datetime import date

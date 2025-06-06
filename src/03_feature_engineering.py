@@ -1,4 +1,4 @@
-# src/feature_engineering.py
+# src/03_feature_engineering.py
 # This script adds technical indicators, calendar features, lag features, and more to stock price CSVs.
 
 import os
