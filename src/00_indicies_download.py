@@ -46,7 +46,7 @@ def clean_and_format_index_data():
         if file.endswith(".csv") and file.replace(".csv", "") in INDEX_TICKERS:
             input_path = os.path.join(TRUE_RAW_DIR, file)
 
-            # ✅ Read CSV and always drop the first two rows
+            # Read CSV and always drop the first two rows
             df = pd.read_csv(input_path, index_col=0)
             df = df.iloc[2:].copy()
 
@@ -57,7 +57,7 @@ def clean_and_format_index_data():
             df.insert(0, "Date", df.index)
             df.reset_index(drop=True, inplace=True)
 
-            # ✅ Keep column naming consistent with the rest of the pipeline
+            # Keep column naming consistent with the rest of the pipeline
             desired_order = ["Date", "TICKER", "Close", "High", "Low", "Open", "Volume"]
             df = df[[col for col in desired_order if col in df.columns]]
 
