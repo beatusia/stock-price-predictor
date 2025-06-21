@@ -1,9 +1,9 @@
 # src/03_feature_engineering.py
 # This script adds technical indicators, calendar features, lag features, and more to stock price CSVs.
 
-import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pandas_ta as ta
 
@@ -98,7 +98,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     for length in [5, 10, 20, 50, 200]:
         df[f"sma_{length}"] = ta.sma(df["Close"], length=length)
 
-    for length in [5, 10, 20]:
+    for length in [5, 10, 12, 20, 26, 50, 200]:
         df[f"ema_{length}"] = ta.ema(df["Close"], length=length)
 
     # -------------------------------------- #
@@ -131,6 +131,160 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         df["psar"] = psar_df.iloc[:, 0]
 
     # -------------------------------------- #
+    # SWING DIRECTION LABEL
+    # -------------------------------------- #
+
+    # Define thresholds (e.g., 0.5% swing range)
+    up_threshold = 0.005
+    down_threshold = -0.005
+
+    # Calculate daily return
+    df["daily_return"] = df["Close"].pct_change()
+
+    # Label direction
+    def classify_swing(r):
+        if pd.isna(r):
+            return "grind"  # or np.nan
+        elif r > up_threshold:
+            return "up"
+        elif r < down_threshold:
+            return "down"
+        else:
+            return "grind"
+
+    df["swing_direction"] = df["daily_return"].apply(classify_swing)
+
+    # -------------------------------------- #
+    # MULTI-DAY SWING TREND DETECTION
+    # -------------------------------------- #
+
+    trend_window = 5  # lookback period in days
+    up_threshold = 0.01  # +1% over 5 days → uptrend
+    down_threshold = -0.01  # -1% over 5 days → downtrend
+    grind_volatility_threshold = 0.005  # max relative swing to be called sideways
+
+    # Calculate rolling return
+    df["trend_return"] = (df["Close"] - df["Close"].shift(trend_window)) / df[
+        "Close"
+    ].shift(trend_window)
+
+    # Calculate relative price range over the window
+    df["trend_range"] = (
+        df["Close"].rolling(window=trend_window).max()
+        - df["Close"].rolling(window=trend_window).min()
+    ) / df["Close"].rolling(window=trend_window).mean()
+
+    # Classify swing trend
+    def classify_trend(row):
+        r = row["trend_return"]
+        v = row["trend_range"]
+
+        if pd.isna(r) or pd.isna(v):
+            return "unknown"
+        elif abs(r) < up_threshold and v < grind_volatility_threshold:
+            return "sideways"
+        elif r >= up_threshold:
+            return "uptrend"
+        elif r <= down_threshold:
+            return "downtrend"
+        else:
+            return "sideways"
+
+    df["swing_trend"] = df.apply(classify_trend, axis=1)
+
+    # -------------------------------------- #
+    # TREND DURATION AND TREND IDs
+    # -------------------------------------- #
+
+    # Shift trend to detect changes
+    df["swing_trend_shift"] = df["swing_trend"].shift(1)
+    df["trend_change"] = df["swing_trend"] != df["swing_trend_shift"]
+
+    # Assign a unique ID to each trend
+    df["trend_id"] = df["trend_change"].cumsum()
+
+    # Calculate trend duration for each row
+    df["trend_duration"] = df.groupby("trend_id").cumcount() + 1
+
+    # Flag when a new trend starts (e.g., for signal generation)
+    df["is_trend_start"] = df["trend_duration"] == 1
+
+    # -------------------------------------- #
+    # W.D Gann's Features
+    # -------------------------------------- #
+
+    # Gann angles based on Fibonacci retracement levels
+    df["gann_angle_100"] = df["Close"] * 1.0  # 100% retracement
+    df["gann_angle_50"] = df["Close"] * 0.5  # 50% retracement
+
+    # 3 Consecutive Days Up/Down based on Close
+    df["3_consecutive_up"] = (
+        (df["Close"] > df["Close"].shift(1)).astype(int).rolling(window=3).sum()
+    )
+    df["3_consecutive_down"] = (
+        (df["Close"] < df["Close"].shift(1)).astype(int).rolling(window=3).sum()
+    )
+    df["3_consecutive_up"] = df["3_consecutive_up"].fillna(0).astype(int)
+    df["3_consecutive_down"] = df["3_consecutive_down"].fillna(0).astype(int)
+
+    # 6-11 Days Up/Down based on Close
+    for n in range(6, 12):
+        df[f"{n}_up"] = (
+            df["Close"]
+            .rolling(window=n)
+            .apply(lambda x: all(x[i] < x[i + 1] for i in range(n - 1)), raw=True)
+            .fillna(0)
+            .astype(int)
+        )
+        df[f"{n}_down"] = (
+            df["Close"]
+            .rolling(window=n)
+            .apply(lambda x: all(x[i] > x[i + 1] for i in range(n - 1)), raw=True)
+            .fillna(0)
+            .astype(int)
+        )
+
+    # 3 Consecutive Closes at the Same Price
+    df["same_close_3"] = (
+        (df["Close"] == df["Close"].shift(1)) & (df["Close"] == df["Close"].shift(2))
+    ).astype(int)
+    df["same_close_3"] = df["same_close_3"].fillna(0).astype(int)
+
+    # 3 Consecutive Closes at the Same Price (with 1% tolerance)
+    df["same_close_3_tolerance"] = (
+        (df["Close"].between(df["Close"].shift(1) * 0.99, df["Close"].shift(1) * 1.01))
+        & (
+            df["Close"].between(
+                df["Close"].shift(2) * 0.99, df["Close"].shift(2) * 1.01
+            )
+        )
+    ).astype(int)
+
+    # Gann Seasonanl Dates
+    gann_dates = [
+        "02-04",
+        "03-21",
+        "05-06",
+        "06-22",
+        "08-08",
+        "09-23",
+        "11-07",
+        "12-22",
+    ]
+    df["Date"] = pd.to_datetime(df["Date"])
+    df["is_gann_date"] = df["Date"].dt.strftime("%m-%d").isin(gann_dates).astype(int)
+
+    # -------------------------------------- #
+    # Trend Decay Diagnostics
+    # -------------------------------------- #
+    df["days_since_high"] = (
+        df["High"].expanding().apply(lambda x: len(x) - x.argmax() - 1)
+    ).astype(int)
+    df["days_since_low"] = (
+        df["Low"].expanding().apply(lambda x: len(x) - x.argmin() - 1)
+    ).astype(int)
+
+    # -------------------------------------- #
     # LAG FEATURES FOR 'Close'
     # -------------------------------------- #
     for i in range(1, 21):
@@ -139,7 +293,10 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # -------------------------------------- #
     # TARGET VARIABLE
     # -------------------------------------- #
-    df["Target"] = df["Close"].shift(-1)
+    df["Target_Raw_Close"] = df["Close"].shift(-1)
+    df["Target_Log_Return"] = np.log(df["Close"].shift(-1) / df["Close"])
+    df["Target_%_Return"] = (df["Close"].shift(-1) - df["Close"]) / df["Close"]
+    df["Target_Direction"] = (df["Close"].shift(-1) > df["Close"]).astype(int)
 
     return df
 

@@ -1,6 +1,3 @@
-# src/04_data_merge.py
-# This script merges stock price data with benchmark index features.
-
 import os
 import pandas as pd
 from pathlib import Path
@@ -33,6 +30,14 @@ benchmark_merged = reduce(
     lambda left, right: pd.merge(left, right, on="Date", how="outer"), benchmark_dfs
 )
 
+# Define target columns to appear last
+target_cols_to_move = [
+    "Target_Raw_Close",
+    "Target_Log_Return",
+    "Target_%_Return",
+    "Target_Direction",
+]
+
 # Merge with each stock file
 for file in os.listdir(STOCKS_DIR):
     if not file.endswith(".csv"):
@@ -44,28 +49,50 @@ for file in os.listdir(STOCKS_DIR):
     # Merge with benchmark data
     merged_df = pd.merge(stock_df, benchmark_merged, on="Date", how="left")
 
-    # Reorganize columns: preserve all existing columns, just reposition main groups
-    all_cols = merged_df.columns.tolist()
+    # Remove columns with _x and _y suffixes (from merge conflicts)
+    merged_df = merged_df.loc[:, ~merged_df.columns.str.endswith(("_x", "_y"))]
 
+    # Define preferred base column order (guaranteed order if present)
     base_cols = [
-        col
-        for col in ["Date", "TICKER", "Close", "High", "Low", "Open", "Volume"]
-        if col in merged_df.columns
+        "Date",
+        "TICKER",
+        "Sector",
+        "MarketCap",
+        "MarketCapBin",
+        "Close",
+        "High",
+        "Low",
+        "Open",
+        "Volume",
     ]
-    benchmark_cols = [
-        col for col in all_cols if any(x in col for x in ["SP500", "NASDAQ"])
-    ]
-    lag_cols = [col for col in all_cols if col.startswith("lag_")]
-    target_col = ["Target"] if "Target" in all_cols else []
 
-    # Determine remaining columns (all others)
-    exclude = set(base_cols + benchmark_cols + lag_cols + target_col)
-    other_cols = [col for col in all_cols if col not in exclude]
+    # Determine benchmark columns (e.g., SP500, NASDAQ) and preserve order
+    benchmark_cols = [
+        col
+        for col in merged_df.columns
+        if any(idx in col for idx in ["SP500", "NASDAQ"])
+    ]
+
+    # Determine other features
+    lag_cols = [col for col in merged_df.columns if col.startswith("lag_")]
+    target_cols = [col for col in target_cols_to_move if col in merged_df.columns]
+
+    # All known columns to exclude from "other"
+    known_cols = set(base_cols + benchmark_cols + lag_cols + target_cols)
+    other_cols = [col for col in merged_df.columns if col not in known_cols]
 
     # Final column order
-    ordered_cols = base_cols + benchmark_cols + other_cols + lag_cols + target_col
+    ordered_cols = (
+        [col for col in base_cols if col in merged_df.columns]
+        + benchmark_cols
+        + other_cols
+        + lag_cols
+        + target_cols
+    )
+
+    # Apply order
     merged_df = merged_df[[col for col in ordered_cols if col in merged_df.columns]]
 
-    # Save
+    # Save merged file
     merged_df.to_csv(MERGED_DIR / file, index=False)
     print(f"✅ Merged and saved: {MERGED_DIR / file}")

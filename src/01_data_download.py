@@ -1,6 +1,6 @@
 # src/01_data_download.py
 # This script downloads stock data from Yahoo Finance, cleans it,
-# processes the downloaded data by removing unnecessary rows, adding a ticker column,
+# processes the downloaded data by removing unnecessary rows, adding ticker and sector columns,
 # and reordering columns for consistency.
 # The processed data is saved in a separate directory for further analysis.
 
@@ -24,6 +24,13 @@ us_market_sectors = {
     "Utilities": ["NEE", "DUK"],
     "Real Estate": ["AMT", "PLD"],
     "Materials": ["LIN", "SHW"],
+}
+
+# Invert the mapping for easy lookup
+ticker_to_sector = {
+    ticker: sector
+    for sector, tickers in us_market_sectors.items()
+    for ticker in tickers
 }
 
 # Output directory
@@ -60,6 +67,9 @@ if __name__ == "__main__":
 TRUE_RAW_DIR = "/Users/beatawyspianska/Desktop/AIML_Projects/predict_stock_price/stock-price-predictor/data/raw/true_raw"
 MODIFIED_DIR = "/Users/beatawyspianska/Desktop/AIML_Projects/predict_stock_price/stock-price-predictor/data/raw/modified"
 
+# Ensure the output directory exists
+Path(MODIFIED_DIR).mkdir(parents=True, exist_ok=True)
+
 # Process each CSV in true_raw
 for file in os.listdir(TRUE_RAW_DIR):
     if file.endswith(".csv"):
@@ -69,16 +79,29 @@ for file in os.listdir(TRUE_RAW_DIR):
         df = pd.read_csv(input_path, index_col=0)
         df = df.iloc[2:]
 
-        # Add 'TICKER' column based on filename
+        # Extract ticker from filename
         ticker = os.path.splitext(file)[0]
+        sector = ticker_to_sector.get(ticker, "Unknown")
+
+        # Add TICKER and Sector columns
         df["TICKER"] = ticker
+        df["Sector"] = sector
 
         # Move index (Date) to a column
         df.insert(0, "Date", df.index)
         df.reset_index(drop=True, inplace=True)
 
         # Reorder columns (only include those that exist)
-        desired_order = ["Date", "TICKER", "Close", "High", "Low", "Open", "Volume"]
+        desired_order = [
+            "Date",
+            "TICKER",
+            "Sector",
+            "Close",
+            "High",
+            "Low",
+            "Open",
+            "Volume",
+        ]
         final_columns = [col for col in desired_order if col in df.columns]
         df = df[final_columns]
 

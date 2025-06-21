@@ -75,28 +75,27 @@ def engineer_index_features():
             df["Date"] = pd.to_datetime(df["Date"])
             df.sort_values("Date", inplace=True)
 
-            # Define ticker based on filename
-            ticker = os.path.splitext(file)[0]
+            # Define short ticker key (SP500 or NASDAQ)
+            ticker_key = os.path.splitext(file)[0]
+            close_col = "Close"
 
             # Return features: % change over 1, 5, 10, 20 days
             for period in [1, 5, 10, 20]:
-                df[f"{ticker}_return_{period}"] = df["Close"].pct_change(period)
+                df[f"{ticker_key}_return_{period}"] = df[close_col].pct_change(period)
 
             # Lag features for Close price (1–20 days)
             for i in range(1, 21):
-                df[f"{ticker}_lag_{i}"] = df["Close"].shift(i)
+                df[f"{ticker_key}_lag_{i}"] = df[close_col].shift(i)
 
             # Reorder columns logically
             base_cols = ["Date", "TICKER", "Close", "High", "Low", "Open", "Volume"]
-            return_cols = [f"{ticker}_return_{i}" for i in [1, 5, 10, 20]]
-            lag_cols = [f"{ticker}_lag_{i}" for i in range(1, 21)]
+            return_cols = [f"{ticker_key}_return_{i}" for i in [1, 5, 10, 20]]
+            lag_cols = [f"{ticker_key}_lag_{i}" for i in range(1, 21)]
 
             # Retain only columns that exist (in case some are missing)
             df = df[
                 [col for col in base_cols if col in df.columns] + return_cols + lag_cols
             ]
-
-            # df.dropna(inplace=True)
 
             output_path = PROCESSED_DIR / file
             df.to_csv(output_path, index=False)
