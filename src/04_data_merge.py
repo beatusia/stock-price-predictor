@@ -1,3 +1,6 @@
+# src/04_data_merge.py
+# This script merges stock data with benchmark indices (SP500, NASDAQ) and processes the merged data for further analysis.
+
 import os
 import pandas as pd
 from pathlib import Path

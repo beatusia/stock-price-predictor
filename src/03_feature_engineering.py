@@ -112,6 +112,19 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     if bbands is not None:
         df = pd.concat([df, bbands], axis=1)
 
+    # Add MACD features
+    macd_df = ta.macd(df["Close"], fast=12, slow=26, signal=9)
+    if macd_df is not None and not macd_df.empty:
+        df = pd.concat([df, macd_df], axis=1)
+
+    # Add Stochastic Oscillator features
+    stoch_df = ta.stoch(df["High"], df["Low"], df["Close"], k=14, d=3)
+    if stoch_df is not None and not stoch_df.empty:
+        df = pd.concat([df, stoch_df], axis=1)
+
+    df["stoch_k_smooth"] = df["STOCHk_14_3_3"].rolling(window=3).mean()
+    df["stoch_d_smooth"] = df["STOCHd_14_3_3"].rolling(window=3).mean()
+
     # Volume-based indicators
     df["OBV"] = ta.obv(df["Close"], df["Volume"])
     df["cmf_20"] = ta.cmf(df["High"], df["Low"], df["Close"], df["Volume"], length=20)
