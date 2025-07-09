@@ -90,7 +90,8 @@ def engineer_index_features():
             # Reorder columns logically
             base_cols = ["Date", "TICKER", "Close", "High", "Low", "Open", "Volume"]
             return_cols = [f"{ticker_key}_return_{i}" for i in [1, 5, 10, 20]]
-            lag_cols = [f"{ticker_key}_lag_{i}" for i in range(1, 21)]
+            # Generate only lag 1, 5, 10, 20 columns
+            lag_cols = [f"{ticker_key}_lag_{i}" for i in [1, 5, 10, 20]]
 
             # Retain only columns that exist (in case some are missing)
             df = df[

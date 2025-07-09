@@ -7,7 +7,7 @@ from pathlib import Path
 
 # --- Step 1: Define tickers by sector ---
 us_market_sectors = {
-    "Information Technology": ["AAPL", "MSFT"],
+    "Information Technology": ["AAPL", "MSFT", "NVDA"],
     "Health Care": ["JNJ", "UNH"],
     "Financials": ["JPM", "BAC"],
     "Consumer Discretionary": ["AMZN", "TSLA"],

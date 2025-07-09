@@ -63,18 +63,18 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["avg_volume_20"] = df["Volume"].rolling(window=20).mean()
     df["volume_norm"] = df["Volume"] / df["avg_volume_20"]
 
-    # VWAP: volume-weighted average price (cumulative form)
-    df["vwap"] = (
-        df["Volume"] * (df["High"] + df["Low"] + df["Close"]) / 3
-    ).cumsum() / df["Volume"].cumsum()
+    # VWAP: volume-weighted average price (rolling 20 days)
+    df["rolling_vwap_20"] = (
+        (df["Volume"] * (df["High"] + df["Low"] + df["Close"]) / 3).rolling(20).sum()
+        / df["Volume"].rolling(20).sum()
+    ).fillna(0)
 
     # -------------------------------------- #
     # ROLLING STATS / VOLATILITY
     # -------------------------------------- #
-    for window in [5, 10, 20]:
+    for window in [5, 10, 20, 30, 60, 90, 180]:
         df[f"RollingMean_{window}"] = df["Close"].rolling(window=window).mean()
         df[f"RollingStd_{window}"] = df["Close"].rolling(window=window).std()
-        df[f"volatility_{window}"] = df["Close"].rolling(window=window).std()
 
     # -------------------------------------- #
     # MOMENTUM RETURNS & ACCELERATION
@@ -82,9 +82,18 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     for period in [1, 5, 10, 20]:
         df[f"Return_{period}"] = df["Close"].pct_change(period)
 
-    for length in [5, 10, 20]:
+    for length in [7, 14, 36]:
         df[f"roc_{length}"] = ta.roc(df["Close"], length=length)
         df[f"acceleration_{length}"] = df[f"roc_{length}"].diff()
+
+    # Long-term momentum: rate of change over longer periods
+    df["long_roc_30"] = ta.roc(df["Close"], length=30)
+    df["long_roc_60"] = ta.roc(df["Close"], length=60)
+    df["long_roc_90"] = ta.roc(df["Close"], length=90)
+
+    # Momentum: relative to 10 and 20 days ago
+    df["Momentum_10d"] = df["Close"] / df.groupby("TICKER")["Close"].shift(10) - 1
+    df["Momentum_20d"] = df["Close"] / df.groupby("TICKER")["Close"].shift(20) - 1
 
     # -------------------------------------- #
     # DIFFERENCING
@@ -96,52 +105,71 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # MOVING AVERAGES: SMA & EMA
     # -------------------------------------- #
     for length in [5, 10, 20, 50, 200]:
-        df[f"sma_{length}"] = ta.sma(df["Close"], length=length)
+        df[f"SMA_{length}"] = ta.sma(df["Close"], length=length)
 
-    for length in [5, 10, 12, 20, 26, 50, 200]:
-        df[f"ema_{length}"] = ta.ema(df["Close"], length=length)
+    df["SMA_5_minus_SMA_20"] = df["SMA_5"] - df["SMA_20"]
+    df["SMA_50_minus_SMA_200"] = df["SMA_50"] - df["SMA_200"]
+    df["price_over_SMA_200"] = df["Close"] / df["SMA_200"] - 1
+
+    for length in [5, 20, 50, 200]:
+        df[f"EMA_{length}"] = ta.ema(df["Close"], length=length)
 
     # -------------------------------------- #
     # TECHNICAL INDICATORS
     # -------------------------------------- #
-    df["rsi_14"] = ta.rsi(df["Close"], length=14)
-    df["adx_14"] = ta.adx(df["High"], df["Low"], df["Close"], length=14)["ADX_14"]
+    # Add ADX (Average Directional Index)
+    df["ADX_14"] = ta.adx(df["High"], df["Low"], df["Close"], length=14)["ADX_14"]
+
+    # RSI
+    df["RSI_14"] = ta.rsi(df["Close"], length=14)
 
     # Bollinger Bands
     bbands = ta.bbands(df["Close"])
     if bbands is not None:
         df = pd.concat([df, bbands], axis=1)
 
+    # Add Bollinger Bandwidth and Long Volatility for longer consolidation
+    bb_50 = ta.bbands(df["Close"], length=50)
+    if bb_50 is not None:
+        df["bb_bandwidth_50"] = (bb_50["BBU_50_2.0"] - bb_50["BBL_50_2.0"]) / bb_50[
+            "BBM_50_2.0"
+        ]
+
+    df["long_volatility_50"] = df["Close"].rolling(50).std()
+
     # Add MACD features
     macd_df = ta.macd(df["Close"], fast=12, slow=26, signal=9)
     if macd_df is not None and not macd_df.empty:
         df = pd.concat([df, macd_df], axis=1)
+
+    df["macd_diff"] = df["MACDh_12_26_9"]
+    df["macd_signal"] = df["MACDs_12_26_9"]  # Signal line
 
     # Add Stochastic Oscillator features
     stoch_df = ta.stoch(df["High"], df["Low"], df["Close"], k=14, d=3)
     if stoch_df is not None and not stoch_df.empty:
         df = pd.concat([df, stoch_df], axis=1)
 
-    df["stoch_k_smooth"] = df["STOCHk_14_3_3"].rolling(window=3).mean()
-    df["stoch_d_smooth"] = df["STOCHd_14_3_3"].rolling(window=3).mean()
-
     # Volume-based indicators
     df["OBV"] = ta.obv(df["Close"], df["Volume"])
     df["cmf_20"] = ta.cmf(df["High"], df["Low"], df["Close"], df["Volume"], length=20)
 
-    # Others: ATR, CCI, Stochastic, Williams %R, PSAR
-    df["atr_14"] = ta.atr(df["High"], df["Low"], df["Close"], length=14)
+    # Others: ATR, CCI, Stochastic, Williams %R
+    # ATR
+    high_low = df["High"] - df["Low"]
+    high_close = np.abs(df["High"] - df.groupby("TICKER")["Close"].shift(1))
+    low_close = np.abs(df["Low"] - df.groupby("TICKER")["Close"].shift(1))
+    ranges = pd.concat([high_low, high_close, low_close], axis=1)
+    true_range = ranges.max(axis=1)
+    df["ATR_14"] = true_range.groupby(df["TICKER"]).transform(
+        lambda x: x.rolling(14).mean()
+    )
+
+    # CCI (Commodity Channel Index)
     df["cci_20"] = ta.cci(df["High"], df["Low"], df["Close"], length=20)
 
-    stoch = ta.stoch(df["High"], df["Low"], df["Close"], k=14, d=3)
-    if stoch is not None:
-        df = pd.concat([df, stoch], axis=1)
-
+    # Williams %R
     df["williams_r"] = ta.willr(df["High"], df["Low"], df["Close"], length=14)
-
-    psar_df = ta.psar(df["High"], df["Low"], df["Close"])
-    if psar_df is not None and not psar_df.empty:
-        df["psar"] = psar_df.iloc[:, 0]
 
     # -------------------------------------- #
     # SWING DIRECTION LABEL
@@ -226,10 +254,6 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # W.D Gann's Features
     # -------------------------------------- #
 
-    # Gann angles based on Fibonacci retracement levels
-    df["gann_angle_100"] = df["Close"] * 1.0  # 100% retracement
-    df["gann_angle_50"] = df["Close"] * 0.5  # 50% retracement
-
     # 3 Consecutive Days Up/Down based on Close
     df["3_consecutive_up"] = (
         (df["Close"] > df["Close"].shift(1)).astype(int).rolling(window=3).sum()
@@ -293,23 +317,54 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["days_since_high"] = (
         df["High"].expanding().apply(lambda x: len(x) - x.argmax() - 1)
     ).astype(int)
+
     df["days_since_low"] = (
         df["Low"].expanding().apply(lambda x: len(x) - x.argmin() - 1)
     ).astype(int)
 
+    # long-term trend decay
+    df["days_since_high_50"] = (
+        df["High"].rolling(50, min_periods=1).apply(lambda x: len(x) - x.argmax() - 1)
+    )
+
+    df["days_since_low_50"] = (
+        df["Low"].rolling(50, min_periods=1).apply(lambda x: len(x) - x.argmax() - 1)
+    )
+
     # -------------------------------------- #
     # LAG FEATURES FOR 'Close'
     # -------------------------------------- #
-    for i in range(1, 21):
+    for i in [1, 5, 10, 20]:
         df[f"Close_lag{i}"] = df["Close"].shift(i)
 
     # -------------------------------------- #
     # TARGET VARIABLE
     # -------------------------------------- #
-    df["Target_Raw_Close"] = df["Close"].shift(-1)
-    df["Target_Log_Return"] = np.log(df["Close"].shift(-1) / df["Close"])
-    df["Target_%_Return"] = (df["Close"].shift(-1) - df["Close"]) / df["Close"]
-    df["Target_Direction"] = (df["Close"].shift(-1) > df["Close"]).astype(int)
+    df["Target_Raw_Close_daily"] = df["Close"].shift(-1)
+    df["Target_Log_Return_daily"] = np.log(df["Close"].shift(-1) / df["Close"])
+    df["Target_%_Return_daily"] = (df["Close"].shift(-1) - df["Close"]) / df["Close"]
+    df["Target_Direction_daily"] = (df["Close"].shift(-1) > df["Close"]).astype(int)
+
+    # Longer-term target variables
+    df["Target_Raw_Close_7d"] = df["Close"].shift(-7)
+    df["Target_Raw_Close_14d"] = df["Close"].shift(-14)
+    df["Target_Raw_Close_21d"] = df["Close"].shift(-21)
+
+    for horizon in [7, 14, 21]:
+        # Raw future price
+        df[f"Target_Raw_Close_{horizon}d"] = df["Close"].shift(-horizon)
+        # % Return
+        df[f"Target_%_Return_{horizon}d"] = (
+            df["Close"].shift(-horizon) - df["Close"]
+        ) / df["Close"]
+        # Log Return
+        df[f"Target_Log_Return_{horizon}d"] = np.log(
+            df["Close"].shift(-horizon) / df["Close"]
+        )
+        # Direction: 1 if up, 0 if not
+        df[f"Target_Direction_{horizon}d"] = (
+            df["Close"].shift(-horizon) > df["Close"]
+        ).astype(int)
 
     return df
 
