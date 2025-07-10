@@ -46,22 +46,28 @@ def clean_and_format_index_data():
         if file.endswith(".csv") and file.replace(".csv", "") in INDEX_TICKERS:
             input_path = os.path.join(TRUE_RAW_DIR, file)
 
-            # Read CSV and always drop the first two rows
             df = pd.read_csv(input_path, index_col=0)
             df = df.iloc[2:].copy()
 
             ticker = os.path.splitext(file)[0]
             df["TICKER"] = ticker
 
-            # Move index to column
             df.insert(0, "Date", df.index)
             df.reset_index(drop=True, inplace=True)
 
-            # Keep column naming consistent with the rest of the pipeline
-            desired_order = ["Date", "TICKER", "Close", "High", "Low", "Open", "Volume"]
+            # ✅ Include Adj Close
+            desired_order = [
+                "Date",
+                "TICKER",
+                "Adj Close",
+                "Close",
+                "High",
+                "Low",
+                "Open",
+                "Volume",
+            ]
             df = df[[col for col in desired_order if col in df.columns]]
 
-            # Save to modified dir
             output_path = os.path.join(MODIFIED_DIR, file)
             df.to_csv(output_path, index=False)
             print(f"🧹 Cleaned and saved: {output_path}")
@@ -88,7 +94,16 @@ def engineer_index_features():
                 df[f"{ticker_key}_lag_{i}"] = df[close_col].shift(i)
 
             # Reorder columns logically
-            base_cols = ["Date", "TICKER", "Close", "High", "Low", "Open", "Volume"]
+            base_cols = [
+                "Date",
+                "TICKER",
+                "Close",
+                "Adj Close",
+                "High",
+                "Low",
+                "Open",
+                "Volume",
+            ]
             return_cols = [f"{ticker_key}_return_{i}" for i in [1, 5, 10, 20]]
             # Generate only lag 1, 5, 10, 20 columns
             lag_cols = [f"{ticker_key}_lag_{i}" for i in [1, 5, 10, 20]]

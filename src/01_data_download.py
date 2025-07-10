@@ -95,7 +95,7 @@ for file in os.listdir(TRUE_RAW_DIR):
         desired_order = [
             "Date",
             "TICKER",
-            "Sector",
+            "Adj Close",
             "Close",
             "High",
             "Low",
