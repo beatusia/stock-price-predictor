@@ -22,27 +22,26 @@ This project aims to predict next-day stock prices using historical data and sup
 
 ## ✅ Week 2: Exploratory Data Analysis (EDA)
 
-- [ ] Open and create `exploratory_data_analysis.ipynb`
-- [ ] Plot stock prices, volume, moving averages
-- [ ] Identify trends, volatility, seasonality
-- [ ] Save plots to `outputs/`
-- [ ] Commit: "EDA notebook"
+- ✅ Open and create `exploratory_data_analysis.ipynb`
+- ✅ Plot stock prices, volume, moving averages
+- ✅ Identify trends, volatility, seasonality
+- ✅ Commit: "EDA notebook"
 
 ---
 
 ## ✅ Week 3: Feature Engineering
 
-- [ ] Add lag features and moving averages
-- [ ] Add technical indicators (e.g. RSI, MACD)
-- [ ] Encode time-based features (weekday, month)
-- [ ] Save processed dataset to `data/processed/`
-- [ ] Commit: "Feature engineering completed"
+- ✅ Add lag features and moving averages
+- ✅ Add technical indicators (e.g. RSI, MACD)
+- ✅ Encode time-based features (weekday, month)
+- ✅ Save processed dataset to `data/processed/`
+- ✅ Commit: "Feature engineering completed"
 
 ---
 
 ## ✅ Week 4: Model Building (Baseline)
 
-- [ ] Create `model.py` and `evaluate.py`
+- ✅ Create `model.py` and `evaluate.py`
 - [ ] Train models: Linear Regression, Decision Tree, Random Forest
 - [ ] Evaluate models using RMSE, MAE
 - [ ] Save predictions to `outputs/`

@@ -10,7 +10,7 @@ This project is part of my AI/ML apprenticeship and focuses on applying core lea
 This project uses historical stock data to predict whether a stock's closing price will go up or down the next day. It includes:
 
 - Feature engineering on time-series data (lag, returns, volatility)
-- Linear Regression model
+- Linear Regression model, tree based methods such as Random Forest, LightGBM and XGBoost
 - Model evaluation 
 - Reproducible, modular Python code
 - Ready-to-deploy project structure

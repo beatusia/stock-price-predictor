@@ -79,7 +79,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # -------------------------------------- #
     # MOMENTUM RETURNS & ACCELERATION
     # -------------------------------------- #
-    for period in [1, 5, 10, 20]:
+    for period in [1, 5, 7, 10, 14, 20, 30, 60]:
         df[f"Return_{period}"] = df["Close"].pct_change(period)
 
     for length in [7, 14, 36]:
@@ -334,7 +334,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     # -------------------------------------- #
     # LAG FEATURES FOR 'Close'
     # -------------------------------------- #
-    for i in [1, 5, 10, 20]:
+    for i in [1, 5, 7, 10, 14, 20, 30, 60]:
         df[f"Close_lag{i}"] = df["Close"].shift(i)
 
     # -------------------------------------- #
@@ -346,11 +346,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["Target_Direction_daily"] = (df["Close"].shift(-1) > df["Close"]).astype(int)
 
     # Longer-term target variables
-    df["Target_Raw_Close_7d"] = df["Close"].shift(-7)
-    df["Target_Raw_Close_14d"] = df["Close"].shift(-14)
-    df["Target_Raw_Close_21d"] = df["Close"].shift(-21)
-
-    for horizon in [7, 14, 21]:
+    for horizon in [5, 7, 10, 14, 20, 30, 60]:
         # Raw future price
         df[f"Target_Raw_Close_{horizon}d"] = df["Close"].shift(-horizon)
         # % Return

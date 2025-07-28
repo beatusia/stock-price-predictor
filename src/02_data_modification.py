@@ -67,6 +67,7 @@ processed_folder = Path(
 )
 df_cap_info = pd.DataFrame(market_cap_data)
 
+# --- Step 4: Load processed feature files and update them ---
 for file in processed_folder.glob("*.csv"):
     try:
         df = pd.read_csv(file)
@@ -80,8 +81,14 @@ for file in processed_folder.glob("*.csv"):
             else:
                 market_cap, cap_bin = None, "Unknown"
 
-            # Insert MarketCap and MarketCapBin after TICKER and Sector
-            insert_idx = df.columns.get_loc("Sector") + 1
+            # Try to insert after Sector, else after TICKER, else at end
+            if "Sector" in df.columns:
+                insert_idx = df.columns.get_loc("Sector") + 1
+            elif "TICKER" in df.columns:
+                insert_idx = df.columns.get_loc("TICKER") + 1
+            else:
+                insert_idx = len(df.columns)
+
             df.insert(insert_idx, "MarketCap", market_cap)
             df.insert(insert_idx + 1, "MarketCapBin", cap_bin)
 
